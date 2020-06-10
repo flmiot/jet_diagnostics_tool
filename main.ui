@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>484</width>
+    <height>703</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Jet diagnostics tool - v0.1</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon.png</normaloff>icon.png</iconset>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Images</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Image directory</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_6">
+            <property name="text">
+             <string>Y:\2020_gas_nozzle_tests\OB_0075_01_180_100</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_2">
+            <property name="text">
+             <string>Browse</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTableView" name="tableView">
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_setup">
+       <attribute name="title">
+        <string>Setup</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <layout class="QFormLayout" name="formLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="slicePositionLabel">
+            <property name="text">
+             <string>Slice position (px)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="slicePositionLineEdit">
+            <property name="text">
+             <string>512</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="sliceWidthLabel">
+            <property name="text">
+             <string>Slice width (px)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="sliceWidthLineEdit">
+            <property name="text">
+             <string>24</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="imageWidthPxLabel">
+            <property name="text">
+             <string>Image width (px)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="imageWidthPxLineEdit">
+            <property name="text">
+             <string>512</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="imageHeightPxLabel">
+            <property name="text">
+             <string>Image height (px)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="imageHeightPxLineEdit">
+            <property name="text">
+             <string>1024</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="unitsPerPixelLabel">
+            <property name="text">
+             <string>Units per pixel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="unitsPerPixelLineEdit">
+            <property name="text">
+             <string>1.0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="transposeImageLabel">
+            <property name="text">
+             <string>Transpose image</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QCheckBox" name="transposeImageCheckBox">
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="edgeCropPxLabel">
+            <property name="text">
+             <string>Edge crop (px)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="edgeCropPxLineEdit">
+            <property name="text">
+             <string>10</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="fileSuffixLabel">
+            <property name="text">
+             <string>File suffix</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLineEdit" name="fileSuffixLineEdit">
+            <property name="text">
+             <string>tif</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="value">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>Run selected</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>484</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFle">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionExport"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <addaction name="menuFle"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionImport_TIFF_files">
+   <property name="text">
+    <string>Import TIFF files</string>
+   </property>
+  </action>
+  <action name="actionExport">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionImport_preferences">
+   <property name="text">
+    <string>Import setup</string>
+   </property>
+  </action>
+  <action name="actionExport_Setup">
+   <property name="text">
+    <string>Export setup</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>lineEdit_6</sender>
+   <signal>editingFinished()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_image_diretory_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>186</x>
+     <y>77</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>478</x>
+     <y>26</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>slicePositionLineEdit</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_setup_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>196</x>
+     <y>70</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>442</x>
+     <y>-8</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sliceWidthLineEdit</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_setup_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>140</x>
+     <y>106</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>295</x>
+     <y>-2</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>imageHeightPxLineEdit</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_setup_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>271</x>
+     <y>148</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>296</x>
+     <y>-14</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>imageWidthPxLineEdit</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_setup_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>244</x>
+     <y>120</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>448</x>
+     <y>21</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>unitsPerPixelLineEdit</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_setup_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>384</x>
+     <y>171</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>427</x>
+     <y>678</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>transposeImageCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_setup_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>196</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>366</x>
+     <y>682</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>fileSuffixLineEdit</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_setup_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>186</x>
+     <y>242</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>281</x>
+     <y>675</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>edgeCropPxLineEdit</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_setup_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>146</x>
+     <y>220</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>7</x>
+     <y>637</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_run_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>425</x>
+     <y>661</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>8</x>
+     <y>591</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_2</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_browse_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>408</x>
+     <y>72</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>44</x>
+     <y>674</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>on_image_diretory_changed()</slot>
+  <slot>on_setup_changed()</slot>
+  <slot>on_run_clicked()</slot>
+  <slot>on_browse_clicked()</slot>
+ </slots>
+</ui>
