@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import io
+import csv
 import numpy as np
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
@@ -80,41 +82,77 @@ class ADT_MainWindow(QtWidgets.QMainWindow):
 
 
         self.tableView.setModel(self.model)
+        self.tableView.installEventFilter(self)
+
+
+    def eventFilter(self, source, event):
+        if (event.type() == QtCore.QEvent.KeyPress and
+            event.matches(QtGui.QKeySequence.Copy)):
+            self.copySelection()
+            return True
+        return super(ADT_MainWindow, self).eventFilter(source, event)
+
+
+    def copySelection(self):
+        selection = self.tableView.selectedIndexes()
+        if selection:
+
+            rows = self.model.rowCount()
+
+            to_clipboard = ''
+            for row in range(rows):
+                item_f, item_d = self.model.item(row, 0), self.model.item(row, 1)
+
+                if not self.model.indexFromItem(item_f) in selection:
+                    continue
+
+                name = item_f.data(role = QtCore.Qt.DisplayRole)
+                diameter = item_d.data(role = QtCore.Qt.DisplayRole)
+
+                if diameter is None:
+                    diameter = ""
+
+                to_clipboard += '{}\t{}\n'.format(name, diameter)
+
+                app.clipboard().setText(to_clipboard)
 
 
     def on_export_clicked(self):
-        out = {}
+        try:
+            out = {}
 
-        rows = self.model.rowCount()
-        for row in range(rows):
-            item_f, item_d = self.model.item(row, 0), self.model.item(row, 1)
-            out[item_f.data(role = QtCore.Qt.DisplayRole)] = item_d.data(role = QtCore.Qt.DisplayRole)
-
-        print(out)
-
-        file = QtWidgets.QFileDialog.getSaveFileName(self,"Export diameter data","","JSON files (*.json)")
-
-        with open(file[0], 'w') as f:
-            f.write(json.dumps(out,  indent=4))
+            rows = self.model.rowCount()
+            for row in range(rows):
+                item_f, item_d = self.model.item(row, 0), self.model.item(row, 1)
+                out[item_f.data(role = QtCore.Qt.DisplayRole)] = item_d.data(role = QtCore.Qt.DisplayRole)
 
 
+            file = QtWidgets.QFileDialog.getSaveFileName(self,"Export diameter data","","JSON files (*.json)")
+
+            with open(file[0], 'w') as f:
+                f.write(json.dumps(out,  indent=4))
+        except Exception as e:
+            print(e)
 
 
 
 
     def on_browse_clicked(self):
-        folder = QtWidgets.QFileDialog.getExistingDirectory(None, ("Select Output Folder"), QtCore.QDir.currentPath())
-        self.lineEdit_6.setText(folder)
-        self.on_image_diretory_changed()
+        try:
+            folder = QtWidgets.QFileDialog.getExistingDirectory(None, ("Select Output Folder"), QtCore.QDir.currentPath())
+            self.lineEdit_6.setText(folder)
+            self.on_image_directory_changed()
+        except Exception as e:
+            print(e)
 
 
-    def on_image_diretory_changed(self):
+
+    def on_image_directory_changed(self):
         """ This will update the model """
 
         try:
             self.setup['directory'] = self.lineEdit_6.text()
             files = [f for f in sorted(os.listdir(self.setup['directory'])) if self.setup['file_suffix'] in f]
-            print(files)
         except Exception as e:
             print("no valid directory: {}".format(e))
 
@@ -140,60 +178,71 @@ class ADT_MainWindow(QtWidgets.QMainWindow):
 
 
     def on_run_clicked(self):
-        selected_indexes = self.tableView.selectedIndexes()
 
-        rows = self.model.rowCount()
-        plt.close()
-        for row in range(rows):
-            self.progressBar.setValue(round(row/rows* 100.) )
-            item_f, item_d = self.model.item(row, 0), self.model.item(row, 1)
+        self.on_setup_changed()
 
-            if not self.model.indexFromItem(item_f) in selected_indexes:
-                continue
+        try:
+            selected_indexes = self.tableView.selectedIndexes()
 
-            file = item_f.data(role = QtCore.Qt.DisplayRole)
-            file_full = os.path.join(self.setup['directory'], file)
+            rows = self.model.rowCount()
+            plt.close()
 
-            pos, wi = self.setup['slice_position'], self.setup['slice_width']
-            ec = self.setup['edge_crop']
+            for row in range(rows):
+                self.progressBar.setValue(round(row/rows* 100.) )
+                item_f, item_d = self.model.item(row, 0), self.model.item(row, 1)
 
-            sl = np.s_[:, int(pos - wi/2) : int(pos + wi/2)]
+                if not self.model.indexFromItem(item_f) in selected_indexes:
+                    continue
 
-            img = sobel_convolution(plt.imread(file_full)[sl])[ec:-ec, ec:-ec]
+                file = item_f.data(role = QtCore.Qt.DisplayRole)
+                file_full = os.path.join(self.setup['directory'], file)
 
-            # plt.imshow(img)
-            # plt.show()
+                pos, wi = self.setup['slice_position'], self.setup['slice_width']
+                ec = self.setup['edge_crop']
 
-            if self.setup['transpose_image']:
-                img = img.T
+                sl = np.s_[:, int(pos - wi/2) : int(pos + wi/2)]
 
-            profile =  img.sum(axis = 0)
+                img = sobel_convolution(plt.imread(file_full)[sl])[ec:-ec, ec:-ec]
 
-            plt.plot(np.arange(len(profile)) * self.setup['units_per_pixel'], profile, label = file)
+                # plt.imshow(img)
+                # plt.show()
+
+                if self.setup['transpose_image']:
+                    img = img.T
+
+                profile =  img.sum(axis = 0)
+
+                if self.setup['plot']:
+                    plt.plot(np.arange(len(profile)) * self.setup['units_per_pixel'], profile, label = file)
 
 
-            # Determine jet width
-            c = np.ma.masked_array(profile)
-            i0 = np.argmax(c)
+                # Determine jet width
+                c = np.ma.masked_array(profile)
+                i0 = np.argmax(c)
 
-            c = np.ma.masked_array(profile)
-            mask = mask = np.array([False] * len(c))
-            mask[i0-5:i0+5] = True
-            c.mask = mask
+                c = np.ma.masked_array(profile)
+                mask = mask = np.array([False] * len(c))
+                mask[i0-5:i0+5] = True
+                c.mask = mask
 
-            i1 = np.argmax(c)
+                i1 = np.argmax(c)
 
-            width = float(np.abs(i1 - i0))
+                width = float(np.abs(i1 - i0))
 
-            item_d.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled  | QtCore.Qt.ItemIsEditable)
-            item_d.setData(self.setup['units_per_pixel'] * width, role = QtCore.Qt.DisplayRole)
-            item_d.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                item_d.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled  | QtCore.Qt.ItemIsEditable)
+                item_d.setData(self.setup['units_per_pixel'] * width, role = QtCore.Qt.DisplayRole)
+                item_d.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
-            app.processEvents()
+                app.processEvents()
 
-        self.progressBar.setValue(100.)
-        plt.show()
-        plt.legend()
+            self.progressBar.setValue(100.)
+
+            if self.setup['plot']:
+                plt.show()
+                plt.legend()
+
+        except Exception as e:
+            print(e)
 
 
 
@@ -209,6 +258,7 @@ class ADT_MainWindow(QtWidgets.QMainWindow):
             self.setup['transpose_image'] = self.transposeImageCheckBox.isChecked() == True
             self.setup['edge_crop'] = int(self.edgeCropPxLineEdit.text())
             self.setup['file_suffix'] = self.fileSuffixLineEdit.text()
+            self.setup['plot'] = self.showPlotCheckBox.isChecked() == True
 
 
         except Exception as e:
