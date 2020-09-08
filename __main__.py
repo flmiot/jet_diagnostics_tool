@@ -6,14 +6,12 @@ import csv
 import numpy as np
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-
 import matplotlib.pyplot as plt
 
 def sobel_convolution(image):
-    """ *image* has to be 2D array. *kernel* has to be a 3x3 matrix. """
 
     image  = np.array(image, np.float64)
-    result = np.array(image, np.float64)
+    result = np.zeros(image.shape, np.float64)
 
     sobel_x = np.array([
         [-1, 0, 1],
@@ -28,6 +26,7 @@ def sobel_convolution(image):
 
     for idr, row in enumerate(image):
         for idc, column in enumerate(row):
+
             if idr == 0:
                 y0, y1 = 0, idr + 1
                 k_y0, k_y1 = 1, 2
@@ -41,6 +40,7 @@ def sobel_convolution(image):
                 y0 = idr - 1
                 y1 = idr
                 k_y0, k_y1 = 0, 1
+
 
             if idc == 0:
                 x0, x1 = 0, idc + 1
@@ -56,12 +56,40 @@ def sobel_convolution(image):
                 x1 = idc
                 k_x0, k_x1 = 0, 1
 
+            check = [x0, x1, y0, y1, k_x0, k_x1, k_y0, k_y1]
+
+            for c in check:
+                if c < 0:
+                    print("negative index!")
+
+            for k_1 in [k_x1, k_y1]:
+                if k_1 > 2:
+                    print("k1 too big")
+
+            for k_0 in [k_x0, k_y0]:
+                if k_1 < 0:
+                    print("k0 too small")
+
+            if image[y0:y1+1, x0:x1+1].shape != sobel_x[k_y0 : k_y1 + 1, k_x0 : k_x1 +1].shape:
+                print("Kernel image missmatch")
+
+
             x = np.sum(image[y0:y1+1, x0:x1+1] * sobel_x[k_y0 : k_y1 + 1, k_x0 : k_x1 +1])
             y = np.sum(image[y0:y1+1, x0:x1+1] * sobel_y[k_y0 : k_y1 + 1, k_x0 : k_x1 +1])
-            result[y0:y1+1, x0:x1+1] = np.sqrt(x**2 + y**2)
+            result[y0:y1+1, x0:x1+1] = y**2
 
     return result
 
+def calculateCOM(e, i, window=None):
+
+    print(window)
+    if window is not None:
+        e0, e1 = window
+        i0, i1 = np.argmin(np.abs(e - e0)), np.argmin(np.abs(e - e1))
+        i, e = i[i0:i1], e[i0:i1]
+
+    com = 1 / np.nansum(i) * np.nansum(e * i)
+    return com
 
 class ADT_MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -199,12 +227,15 @@ class ADT_MainWindow(QtWidgets.QMainWindow):
 
                 pos, wi = self.setup['slice_position'], self.setup['slice_width']
                 ec = self.setup['edge_crop']
+                psr = self.setup['peak_search_radius']
+                upp = self.setup['units_per_pixel']
 
                 sl = np.s_[:, int(pos - wi/2) : int(pos + wi/2)]
 
-                img = sobel_convolution(plt.imread(file_full)[sl])[ec:-ec, ec:-ec]
+                img = sobel_convolution(plt.imread(file_full)[sl])
 
-                # plt.imshow(img)
+                # plt.figure()
+                # plt.imshow(img, aspect = "auto")
                 # plt.show()
 
                 if self.setup['transpose_image']:
@@ -212,28 +243,43 @@ class ADT_MainWindow(QtWidgets.QMainWindow):
 
                 profile =  img.sum(axis = 0)
 
-                if self.setup['plot']:
-                    plt.plot(np.arange(len(profile)) * self.setup['units_per_pixel'], profile, label = file)
 
 
                 # Determine jet width
                 c = np.ma.masked_array(profile)
+                x = np.arange(len(profile))
+                mask = np.array([False] * len(c))
+                mask[:ec] = True
+                mask[-ec:] = True
+                c.mask = mask
+                y0, y1 = np.min(c), np.max(c)
                 i0 = np.argmax(c)
-
-                c = np.ma.masked_array(profile)
-                mask = mask = np.array([False] * len(c))
-                mask[i0-5:i0+5] = True
+                print(i0)
+                pos0 = calculateCOM(x, c - np.nanmin(c), window = [i0 - psr, i0 + psr + 1])
+                mask[i0-psr:i0+psr+1] = True
                 c.mask = mask
 
                 i1 = np.argmax(c)
+                pos1 = calculateCOM(x, c - np.nanmin(c), window = [i1 - psr, i1 + psr + 1])
 
-                width = float(np.abs(i1 - i0))
+                width = float(np.abs(pos1 - pos0)) * upp
 
                 item_d.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled  | QtCore.Qt.ItemIsEditable)
-                item_d.setData(self.setup['units_per_pixel'] * width, role = QtCore.Qt.DisplayRole)
+                item_d.setData(width , role = QtCore.Qt.DisplayRole)
                 item_d.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
                 app.processEvents()
+
+                if self.setup['plot']:
+                    plt.figure()
+                    plt.plot(np.arange(len(profile)) * self.setup['units_per_pixel'], profile, label = file)
+                    # plt.plot([pos0 * upp, pos0 * upp], [y0, y1],  "r")
+                    # plt.plot([pos1 * upp , pos1 * upp], [y0, y1],  "r")
+                    # plt.plot([i0 * upp, i0 * upp], [y0, y1],  "b--")
+                    # plt.plot([i1 * upp, i1 * upp], [y0, y1],  "b--")
+                    plt.ylim([y0 - 0.1 * np.ptp([y0,y1]), y1 + 0.1 * np.ptp([y0,y1])])
+                    plt.xlim([pos0 * upp - 2 *width, pos1*upp + 2*width ])
+
 
             self.progressBar.setValue(100.)
 
@@ -257,6 +303,7 @@ class ADT_MainWindow(QtWidgets.QMainWindow):
             self.setup['units_per_pixel'] = float(self.unitsPerPixelLineEdit.text())
             self.setup['transpose_image'] = self.transposeImageCheckBox.isChecked() == True
             self.setup['edge_crop'] = int(self.edgeCropPxLineEdit.text())
+            self.setup['peak_search_radius'] = int(self.peakSearchRadiusLineEdit.text())
             self.setup['file_suffix'] = self.fileSuffixLineEdit.text()
             self.setup['plot'] = self.showPlotCheckBox.isChecked() == True
 
